@@ -37,27 +37,19 @@ public class PointChargeTest {
     private PointService pointService;
 
 
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    public void init() {
-        mockMvc = MockMvcBuilders.standaloneSetup(pointController).build();
-    }
-    
-
-    @DisplayName("포인트 충전 성공")
+    @DisplayName("보유 포인트가 0일 경우 - 포인트 충전 성공")
     @Test
-    void pointChargeTest() throws Exception {
+    void pointChargeTest() {
         // given
         long userId = 1L;
         long chargeAmount = 10L;
         UserPoint expectedUserPoint = new UserPoint(userId, chargeAmount, System.currentTimeMillis());
         Mockito.when(pointService.chargeUserPoint(userId, chargeAmount)).thenReturn(expectedUserPoint);
+        // when
         UserPoint userPoint = pointService.chargeUserPoint(userId, chargeAmount);
-        System.out.println(userPoint.point());
 
-       assertThat(userPoint).isNotNull().returns(chargeAmount, UserPoint::point);
-
+        // then
+        assertThat(userPoint.point()).isEqualTo(chargeAmount);
     }
 
 
