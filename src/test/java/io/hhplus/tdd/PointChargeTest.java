@@ -1,9 +1,11 @@
 package io.hhplus.tdd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.PointController;
 import io.hhplus.tdd.point.PointService;
 import io.hhplus.tdd.point.UserPoint;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,14 +31,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * */
 @ExtendWith(MockitoExtension.class)
 public class PointChargeTest {
+    @Mock
+    private UserPointTable userPointTable;
 
     @InjectMocks
-    private PointController pointController;
-
-    @Mock
     private PointService pointService;
 
     long maxPoint = 10000L;
+    long minPoint = 0L;
 
     @DisplayName("보유 포인트가 0일 경우 - 포인트 충전 성공")
     @Test
@@ -44,8 +46,11 @@ public class PointChargeTest {
         // given
         long userId = 1L;
         long chargeAmount = 10L;
-        UserPoint expectedUserPoint = new UserPoint(userId, chargeAmount, System.currentTimeMillis());
-        Mockito.when(pointService.chargeUserPoint(userId, chargeAmount)).thenReturn(expectedUserPoint);
+        UserPoint emptyUserPoint = new UserPoint(userId, minPoint, System.currentTimeMillis());
+        UserPoint chargedUserPoint = new UserPoint(userId, chargeAmount, System.currentTimeMillis());
+
+        Mockito.when(userPointTable.selectById(userId)).thenReturn(emptyUserPoint);
+        Mockito.when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(chargedUserPoint);
 
         // when
         UserPoint userPoint = pointService.chargeUserPoint(userId, chargeAmount);
@@ -61,9 +66,11 @@ public class PointChargeTest {
         long userId = 1L;
         long chargedPoint = 1000L;
         long chargeAmount = 100L;
-        UserPoint expectedUserPoint = new UserPoint(userId, chargedPoint+chargeAmount, System.currentTimeMillis());
-        Mockito.when(pointService.chargeUserPoint(userId, chargeAmount)).thenReturn(expectedUserPoint);
-
+        long newAmount =chargeAmount + chargedPoint;
+        UserPoint chargedUserPoint = new UserPoint(userId, chargedPoint, System.currentTimeMillis());
+        UserPoint chargUserPoint = new UserPoint(userId, chargedPoint+ chargeAmount, System.currentTimeMillis());
+        Mockito.when(userPointTable.selectById(userId)).thenReturn(chargedUserPoint);
+        Mockito.when(userPointTable.insertOrUpdate(userId,newAmount)).thenReturn(chargUserPoint);
         // when
         UserPoint userPoint = pointService.chargeUserPoint(userId, chargeAmount);
 
@@ -71,20 +78,30 @@ public class PointChargeTest {
         assertThat(userPoint.point()).isEqualTo(chargedPoint + chargeAmount);
     }
 
-    // ErrorResponse 활용하여 throw Exception 작성 중
-//    @DisplayName("보유 포인트가 최대값일 경우 - 포인트 충전 실패")
+    @DisplayName("보유 포인트가 최대값일 경우 - 포인트 충전 실패")
+    @Test
+    void shouldFailToCharge_WhenUserHasMaxPoints() {
+        // given
+        long userId = 1L;
+        long chargeAmount = 100L;
+        UserPoint userMaxPoint = new UserPoint(userId, maxPoint, System.currentTimeMillis());
+        // Mock 대상은 pointService가 아니라 userPointTable이어야 함
+        Mockito.when(userPointTable.selectById(userId)).thenReturn(userMaxPoint);
+
+        // when & then
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> {
+            pointService.chargeUserPoint(userId, chargeAmount);
+        });
+
+        Assertions.assertEquals("포인트 최대값 초과되었습니다.", exception.getMessage());
+    }
+
+//    @DisplayName("충전 후 포인트가 최대값을 초과했을 경우 - 포인트 충전 실패")
 //    @Test
-//    void shouldFailToCharge_WhenUserHasMaxPoints() {
+//    void shouldFailToCharge_WhenExceedingMaxPoint() {
 //        // given
 //        long userId = 1L;
-//        long chargedPoint = maxPoint;
-//        UserPoint expectedUserPoint = new UserPoint(userId, maxPoint, System.currentTimeMillis());
-//        Mockito.when(pointService.chargeUserPoint(userId, 0)).thenThrow();
-//        // when
-//
-//        // then
+//        long
 //    }
-
-
 
 }
