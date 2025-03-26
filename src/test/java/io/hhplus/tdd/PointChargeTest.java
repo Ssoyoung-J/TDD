@@ -1,12 +1,12 @@
 package io.hhplus.tdd;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
-import io.hhplus.tdd.point.PointController;
+import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.PointService;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,17 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MockMvcBuilder;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static java.time.LocalTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 
 /**
  * 단위 테스트 작성
@@ -33,6 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PointChargeTest {
     @Mock
     private UserPointTable userPointTable;
+
+    @Mock
+    private PointHistoryTable pointHistoryTable;
+
+//    @Mock
+//    private TransactionType type;
 
     @InjectMocks
     private PointService pointService;
@@ -46,8 +46,9 @@ public class PointChargeTest {
         // given
         long userId = 1L;
         long chargeAmount = 10L;
-        UserPoint emptyUserPoint = new UserPoint(userId, minPoint, System.currentTimeMillis());
-        UserPoint chargedUserPoint = new UserPoint(userId, chargeAmount, System.currentTimeMillis());
+        long timeStamp = System.currentTimeMillis();
+        UserPoint emptyUserPoint = new UserPoint(userId, minPoint, timeStamp);
+        UserPoint chargedUserPoint = new UserPoint(userId, chargeAmount, timeStamp);
 
         Mockito.when(userPointTable.selectById(userId)).thenReturn(emptyUserPoint);
         Mockito.when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(chargedUserPoint);
@@ -71,6 +72,7 @@ public class PointChargeTest {
         UserPoint chargUserPoint = new UserPoint(userId, chargedPoint+ chargeAmount, System.currentTimeMillis());
         Mockito.when(userPointTable.selectById(userId)).thenReturn(chargedUserPoint);
         Mockito.when(userPointTable.insertOrUpdate(userId,newAmount)).thenReturn(chargUserPoint);
+
         // when
         UserPoint userPoint = pointService.chargeUserPoint(userId, chargeAmount);
 
@@ -93,15 +95,40 @@ public class PointChargeTest {
             pointService.chargeUserPoint(userId, chargeAmount);
         });
 
-        Assertions.assertEquals("포인트 최대값 초과되었습니다.", exception.getMessage());
+        assertEquals("포인트 최대값 초과되었습니다.", exception.getMessage());
     }
 
-//    @DisplayName("충전 후 포인트가 최대값을 초과했을 경우 - 포인트 충전 실패")
-//    @Test
-//    void shouldFailToCharge_WhenExceedingMaxPoint() {
-//        // given
-//        long userId = 1L;
-//        long
-//    }
+    @DisplayName("충전 후 포인트가 최대값을 초과했을 경우 - 포인트 충전 실패")
+    @Test
+    void shouldFailToCharge_WhenExceedingMaxPoint() {
+        // given
+        long userId = 1L;
+        long chargeAmount = 100L;
+        long chargedAmount = 9999L;
+        UserPoint chargedUserPoint = new UserPoint(userId, chargedAmount, System.currentTimeMillis());
+        Mockito.when(userPointTable.selectById(userId)).thenReturn(chargedUserPoint);
+
+        // when
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> {
+            pointService.chargeUserPoint(userId, chargeAmount);
+        });
+
+        assertEquals("포인트 최대값 초과되었습니다.", exception.getMessage());
+    }
+
+    @DisplayName("충전 포인트가 음수일 경우 - 포인트 충전 실패")
+    @Test
+    void shouldFailCharge_WhenNegativeAmount() {
+        // given
+        long userId = 1L;
+        long amount = -1000L;
+
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,  () -> {
+            pointService.chargeUserPoint(userId, amount);
+        });
+
+        assertEquals("충전 포인트는 0보다 커야합니다.", exception.getMessage());
+
+    }
 
 }

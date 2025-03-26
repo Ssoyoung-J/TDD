@@ -1,8 +1,11 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.awt.*;
 
 @Service
 public class PointService {
@@ -34,8 +37,13 @@ public class PointService {
     public UserPoint chargeUserPoint(long id, long amount) {
         // currentPoint 조회
         UserPoint currentPoint = userPointTable.selectById(id);
+        if(amount < 0) {
+            throw new RuntimeException("충전 포인트는 0보다 커야합니다.");
+        }
+
         long newAmount = currentPoint.point() +amount;
-        if(currentPoint.point() + amount > maxPoint) {
+
+        if(newAmount > maxPoint) {
             throw new RuntimeException("포인트 최대값 초과되었습니다.");
         }
         UserPoint result = userPointTable.insertOrUpdate(id, newAmount);

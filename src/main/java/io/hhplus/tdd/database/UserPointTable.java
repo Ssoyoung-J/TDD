@@ -24,7 +24,6 @@ public class UserPointTable {
         throttle(300);
         UserPoint userPoint = new UserPoint(id, amount, System.currentTimeMillis());
         table.put(id, userPoint);
-        System.out.println("❓❓❓❓❓" + table);
         return userPoint;
     }
 
