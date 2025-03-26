@@ -17,8 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 
 /**
  * 단위 테스트 작성
@@ -27,12 +25,6 @@ import static org.mockito.ArgumentMatchers.eq;
 public class PointChargeTest {
     @Mock
     private UserPointTable userPointTable;
-
-    @Mock
-    private PointHistoryTable pointHistoryTable;
-
-//    @Mock
-//    private TransactionType type;
 
     @InjectMocks
     private PointService pointService;
@@ -77,7 +69,7 @@ public class PointChargeTest {
         UserPoint userPoint = pointService.chargeUserPoint(userId, chargeAmount);
 
         // then
-        assertThat(userPoint.point()).isEqualTo(chargedPoint + chargeAmount);
+        assertThat(userPoint.point()).isEqualTo(newAmount);
     }
 
     @DisplayName("보유 포인트가 최대값일 경우 - 포인트 충전 실패")
@@ -123,6 +115,7 @@ public class PointChargeTest {
         long userId = 1L;
         long amount = -1000L;
 
+        // when & then
         RuntimeException exception = Assertions.assertThrows(RuntimeException.class,  () -> {
             pointService.chargeUserPoint(userId, amount);
         });
