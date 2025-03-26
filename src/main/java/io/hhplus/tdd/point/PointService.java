@@ -79,9 +79,9 @@ public class PointService {
      * */
     public UserPoint selectUserPointById(long id) {
         // currentPoint 조회
-        UserPoint currentPoint = userPointTable.selectById(id);
+        UserPoint result = userPointTable.selectById(id);
 
-        return currentPoint;
+        return result;
     }
 
 }
