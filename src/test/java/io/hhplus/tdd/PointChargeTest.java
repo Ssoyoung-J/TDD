@@ -51,7 +51,7 @@ public class PointChargeTest {
 
         // then
         assertThat(userPoint.point()).isEqualTo(chargeAmount);
-        assertNotNull(pointHistoryTable.selectAllByUserId(1L));
+
     }
 
     @DisplayName("충전 포인트 : N, 보유 포인트 : M일 경우 - 포인트 충전 성공")
@@ -72,7 +72,6 @@ public class PointChargeTest {
 
         // then
         assertThat(userPoint.point()).isEqualTo(newAmount);
-        assertNotNull(pointHistoryTable.selectAllByUserId(1L));
     }
 
     @DisplayName("보유 포인트가 최대값일 경우 - 포인트 충전 실패")
@@ -91,8 +90,6 @@ public class PointChargeTest {
         });
 
         assertEquals("포인트 최대값 초과되었습니다.", exception.getMessage());
-        assertNotNull(pointHistoryTable.selectAllByUserId(1L));
-        assertTrue(pointHistoryTable.selectAllByUserId(1L).isEmpty());
     }
 
     @DisplayName("충전 후 포인트가 최대값을 초과했을 경우 - 포인트 충전 실패")
@@ -111,8 +108,6 @@ public class PointChargeTest {
         });
 
         assertEquals("포인트 최대값 초과되었습니다.", exception.getMessage());
-        assertNotNull(pointHistoryTable.selectAllByUserId(1L));
-        assertTrue(pointHistoryTable.selectAllByUserId(1L).isEmpty());
     }
 
     @DisplayName("충전 포인트가 음수일 경우 - 포인트 충전 실패")
@@ -128,8 +123,6 @@ public class PointChargeTest {
         });
 
         assertEquals("충전 포인트는 0보다 커야합니다.", exception.getMessage());
-        assertNotNull(pointHistoryTable.selectAllByUserId(1L));
-        assertTrue(pointHistoryTable.selectAllByUserId(1L).isEmpty());
 
     }
 

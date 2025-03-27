@@ -72,23 +72,24 @@ public class PointUseTest {
         assertThat(userPoint.point()).isEqualTo(0L);
     }
 
-    @DisplayName("보유 포인트가 0일 때 - 포인트 사용 불가")
-    @Test
-    void shouldUseSuccessfully_WhenUserHasZeroPoint() {
-        // given
-        long userId = 2L;
-        long amount = 100L;
-        long timeStamp = System.currentTimeMillis();
-        UserPoint emptyPoint = new UserPoint(userId, 0L, timeStamp);
-        Mockito.when(userPointTable.selectById(userId)).thenReturn(emptyPoint);
-
-        // when & then
-        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            pointService.useUserPoint(userId,amount);
-        });
-
-        assertEquals("보유 포인트가 0이므로 포인트 사용 불가합니다.", exception.getMessage());
-    }
+    //  보유 포인트가 사용 포인트 미만일 경우와 동일한 조건으로 판단되므로 주석 처리
+//    @DisplayName("보유 포인트가 0일 때 - 포인트 사용 불가")
+//    @Test
+//    void shouldUseSuccessfully_WhenUserHasZeroPoint() {
+//        // given
+//        long userId = 2L;
+//        long amount = 100L;
+//        long timeStamp = System.currentTimeMillis();
+//        UserPoint emptyPoint = new UserPoint(userId, 0L, timeStamp);
+//        Mockito.when(userPointTable.selectById(userId)).thenReturn(emptyPoint);
+//
+//        // when & then
+//        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> {
+//            pointService.useUserPoint(userId,amount);
+//        });
+//
+//        assertEquals("보유 포인트가 0이므로 포인트 사용 불가합니다.", exception.getMessage());
+//    }
 
     @DisplayName("보유 포인트가 사용 포인트 미만일 경우 - 포인트 사용 불가")
     @Test

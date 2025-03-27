@@ -5,7 +5,8 @@ import io.hhplus.tdd.database.UserPointTable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
+import java.util.List;
+
 
 @Service
 public class PointService {
@@ -15,6 +16,9 @@ public class PointService {
      */
     @Autowired
     private UserPointTable userPointTable;
+
+    @Autowired
+    private PointHistoryTable pointHistoryTable;
     
     // point의 최대, 최소값 설정
     private final long maxPoint = 10000L;
@@ -40,6 +44,7 @@ public class PointService {
             throw new RuntimeException("포인트 최대값 초과되었습니다.");
         }
         UserPoint result = userPointTable.insertOrUpdate(id, newAmount);
+        pointHistoryTable.insert(id, newAmount, TransactionType.CHARGE, result.updateMillis());
 
         return result;
     }
@@ -69,6 +74,7 @@ public class PointService {
         }
 
         UserPoint result = userPointTable.insertOrUpdate(id, newAmount);
+        pointHistoryTable.insert(id, newAmount, TransactionType.USE, result.updateMillis());
 
         return result;
 
@@ -80,6 +86,15 @@ public class PointService {
     public UserPoint selectUserPointById(long id) {
         // currentPoint 조회
         UserPoint result = userPointTable.selectById(id);
+
+        return result;
+    }
+    
+    /**
+     * 특정 유저의 포인트 충전/사용 내역 조회하는 기능
+     * */
+    public List<PointHistory> selectUserPointHistory(long id) {
+        List<PointHistory> result = pointHistoryTable.selectAllByUserId(id);
 
         return result;
     }
