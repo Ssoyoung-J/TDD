@@ -42,13 +42,13 @@ public class PointIntegrationTest {
 
         // when
         for (int i = 1; i <= 100; i++) {
-            ReentrantLock lock = lockMap.computeIfAbsent(userId, k -> new ReentrantLock());
-            // 사용자별 락
-            lock.lock();
+//            ReentrantLock lock = lockMap.computeIfAbsent(userId, k -> new ReentrantLock());
+//            // 사용자별 락
+//            lock.lock();
             try {
                 pointService.chargeUserPoint(userId, 100L);
             } finally {
-                lock.unlock();
+//                lock.unlock();
                 countDownLatch.countDown();
             }
         }
@@ -63,9 +63,9 @@ public class PointIntegrationTest {
         assertEquals(10000L, userPointTable.selectById(userId).point());
     }
 
-    @DisplayName("동시에 여러 사용자가 포인트 충전을 요청했을 경우 - CountDownLatch")
+    @DisplayName("동시에 여러 사용자가 포인트 사용을 요청했을 경우 - CountDownLatch")
     @Test
-    void shouldHandleConcurrentPointCharges_WithCountDownLatch() throws InterruptedException{
+    void shouldHandleConcurrentPointUses_WithCountDownLatch() throws InterruptedException{
         // given
         CountDownLatch countDownLatch = new CountDownLatch(100);
         ExecutorService executor = Executors.newFixedThreadPool(5);
@@ -73,13 +73,14 @@ public class PointIntegrationTest {
         // when
         for (int i = 1; i <= 100; i++) {
            long userId = (long) i;
-           ReentrantLock lock = lockMap.computeIfAbsent(userId, k -> new ReentrantLock());
+           pointService.chargeUserPoint(userId, 100L);
+//           ReentrantLock lock = lockMap.computeIfAbsent(userId, k -> new ReentrantLock());
             // 사용자별 락
-           lock.lock();
+//           lock.lock();
            try {
-               pointService.chargeUserPoint(userId, 10L);
+               pointService.useUserPoint(userId, 10L);
            } finally {
-               lock.unlock();
+//               lock.unlock();
                countDownLatch.countDown();
            }
         }
@@ -90,7 +91,7 @@ public class PointIntegrationTest {
         // then
         for(int i =1; i<= 100; i++) {
             long userId = (long) i;
-            assertEquals(userPointTable.selectById(userId).point(), 10L);
+            assertEquals(userPointTable.selectById(userId).point(), 90L);
         }
     }
 
